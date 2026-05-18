@@ -1,0 +1,1959 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>BHU Intelligence Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@400;600;700&family=IBM+Plex+Sans:wght@300;400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:        #0E0A06;
+    --bg2:       #16100A;
+    --bg3:       #1E160E;
+    --bg4:       #261C12;
+    --border:    #3A2C1A;
+    --gold:      #C8922A;
+    --gold-lt:   #E8B84B;
+    --gold-dim:  #8A621C;
+    --ivory:     #EDE8DE;
+    --ivory-dim: #A09080;
+    --ivory-faint:#5A4E42;
+    --red:       #8B2020;
+    --red-lt:    #C44040;
+    --teal:      #1A6B5A;
+    --teal-lt:   #2DA88C;
+    --blue:      #1A4A7A;
+    --blue-lt:   #4A8ABF;
+    --serif:     'Cormorant Garamond', Georgia, serif;
+    --sans:      'IBM Plex Sans', sans-serif;
+    --mono:      'IBM Plex Mono', monospace;
+    --sidebar:   240px;
+    --radius:    6px;
+    --radius-lg: 10px;
+  }
+
+  html, body { height: 100%; overflow: hidden; }
+  body { font-family: var(--sans); background: var(--bg); color: var(--ivory); display: flex; font-size: 14px; line-height: 1.6; }
+
+  /* ── SIDEBAR ── */
+  #sidebar {
+    width: var(--sidebar); min-width: var(--sidebar);
+    background: var(--bg2);
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    padding: 0;
+    height: 100vh;
+    position: fixed; left: 0; top: 0; z-index: 200;
+  }
+
+  .sidebar-brand {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-brand .icon {
+    width: 40px; height: 40px;
+    background: var(--gold);
+    border-radius: var(--radius);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; margin-bottom: 10px;
+  }
+  .sidebar-brand h1 {
+    font-family: var(--serif);
+    font-size: 18px; font-weight: 700;
+    color: var(--ivory); line-height: 1.2;
+  }
+  .sidebar-brand .sub {
+    font-size: 9px; letter-spacing: 0.1em;
+    color: var(--gold); margin-top: 4px;
+    text-transform: uppercase;
+  }
+
+  .sidebar-nav { flex: 1; padding: 16px 0; overflow-y: auto; }
+  .nav-section-label {
+    font-size: 9px; letter-spacing: 0.12em; color: var(--ivory-faint);
+    padding: 12px 20px 6px; text-transform: uppercase;
+  }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer;
+    color: var(--ivory-dim); font-size: 13px; font-weight: 400;
+    border-left: 3px solid transparent;
+    transition: all 0.15s; user-select: none;
+  }
+  .nav-item:hover { background: var(--bg3); color: var(--ivory); }
+  .nav-item.active {
+    background: var(--bg4);
+    color: var(--gold-lt);
+    border-left-color: var(--gold);
+    font-weight: 500;
+  }
+  .nav-item .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+  .sidebar-stats {
+    border-top: 1px solid var(--border);
+    padding: 16px 20px;
+  }
+  .sidebar-stat { margin-bottom: 10px; }
+  .sidebar-stat .val { font-size: 18px; font-weight: 600; color: var(--gold); font-family: var(--mono); }
+  .sidebar-stat .lbl { font-size: 10px; color: var(--ivory-faint); letter-spacing: 0.06em; }
+
+  /* ── MAIN ── */
+  #main {
+    margin-left: var(--sidebar);
+    flex: 1; height: 100vh;
+    overflow-y: auto;
+    display: flex; flex-direction: column;
+  }
+
+  /* Top bar */
+  #topbar {
+    background: var(--bg2); border-bottom: 1px solid var(--border);
+    padding: 0 28px;
+    height: 56px; display: flex; align-items: center;
+    justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+  }
+  .topbar-title { font-family: var(--serif); font-size: 20px; font-weight: 600; color: var(--ivory); }
+  .topbar-sub { font-size: 11px; color: var(--ivory-faint); margin-top: 1px; }
+  .topbar-right { display: flex; gap: 8px; align-items: center; }
+  .badge {
+    background: var(--bg4); border: 1px solid var(--border);
+    border-radius: 20px; padding: 4px 12px;
+    font-size: 11px; color: var(--ivory-dim);
+  }
+  .badge span { color: var(--gold); font-weight: 600; }
+
+  /* Stats ribbon */
+  #stats-ribbon {
+    background: var(--bg3); border-bottom: 1px solid var(--border);
+    padding: 10px 28px;
+    display: grid; grid-template-columns: repeat(7, 1fr); gap: 0;
+  }
+  .ribbon-stat {
+    text-align: center; padding: 4px 8px;
+    border-right: 1px solid var(--border);
+  }
+  .ribbon-stat:last-child { border-right: none; }
+  .ribbon-stat .rv { font-size: 17px; font-weight: 600; color: var(--gold); font-family: var(--mono); }
+  .ribbon-stat .rl { font-size: 9px; color: var(--ivory-faint); letter-spacing: 0.07em; margin-top: 1px; }
+
+  /* Page content */
+  #content { padding: 24px 28px; flex: 1; }
+
+  /* Loading */
+  #loading {
+    position: fixed; inset: 0;
+    background: var(--bg);
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    z-index: 9999; gap: 16px;
+  }
+  .spinner {
+    width: 40px; height: 40px;
+    border: 3px solid var(--border);
+    border-top-color: var(--gold);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .loading-text { font-family: var(--serif); font-size: 18px; color: var(--ivory-dim); }
+
+  /* Cards */
+  .card {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 20px;
+  }
+  .card-title {
+    font-size: 11px; letter-spacing: 0.1em; color: var(--ivory-faint);
+    text-transform: uppercase; margin-bottom: 14px; font-weight: 500;
+  }
+
+  .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 20px; }
+  .kpi {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px;
+    text-align: center;
+  }
+  .kpi .kv { font-size: 22px; font-weight: 600; font-family: var(--mono); }
+  .kpi .kl { font-size: 10px; color: var(--ivory-faint); margin-top: 4px; letter-spacing: 0.07em; }
+
+  /* Filters */
+  .filters {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 16px 20px;
+    margin-bottom: 16px;
+    display: grid; grid-template-columns: 1fr auto auto auto auto; gap: 10px;
+    align-items: center;
+  }
+  .filter-row2 {
+    display: flex; align-items: center; gap: 12px;
+    margin-top: 10px; padding-top: 10px;
+    border-top: 1px solid var(--border);
+  }
+  input[type="text"], select {
+    background: var(--bg); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 12px;
+    color: var(--ivory); font-family: var(--sans); font-size: 13px;
+    outline: none; transition: border 0.15s;
+  }
+  input[type="text"]:focus, select:focus { border-color: var(--gold-dim); }
+  input[type="text"] { width: 100%; }
+  select { cursor: pointer; }
+  .search-wrap { position: relative; }
+  .search-icon { position: absolute; left: 10px; top: 50%; transform: translateY(-50%); color: var(--ivory-faint); font-size: 14px; }
+  .search-wrap input { padding-left: 32px; }
+  input[type="range"] { flex: 1; accent-color: var(--gold); cursor: pointer; }
+
+  .btn {
+    background: var(--bg4); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 14px;
+    color: var(--ivory-dim); font-family: var(--sans); font-size: 13px;
+    cursor: pointer; transition: all 0.15s; white-space: nowrap;
+  }
+  .btn:hover { border-color: var(--gold-dim); color: var(--ivory); }
+  .btn-gold {
+    background: var(--gold); border-color: var(--gold);
+    color: #1A0E00; font-weight: 600;
+  }
+  .btn-gold:hover { background: var(--gold-lt); }
+
+  /* Table */
+  .table-wrap {
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); overflow: hidden;
+  }
+  .tbl-scroll { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  thead tr { background: var(--bg3); border-bottom: 1px solid var(--border); }
+  th {
+    padding: 11px 14px; text-align: left;
+    color: var(--ivory-faint); font-size: 10px;
+    font-weight: 500; letter-spacing: 0.08em;
+    text-transform: uppercase; cursor: pointer;
+    user-select: none; white-space: nowrap;
+    transition: color 0.15s;
+  }
+  th:hover { color: var(--gold); }
+  th.sorted { color: var(--gold); }
+  tbody tr { border-bottom: 1px solid #1E160E; transition: background 0.1s; }
+  tbody tr:last-child { border-bottom: none; }
+  tbody tr:hover { background: var(--bg3); }
+  td { padding: 10px 14px; }
+  td.mono { font-family: var(--mono); font-size: 12px; color: var(--ivory-faint); }
+
+  .avatar {
+    width: 28px; height: 28px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 10px; font-weight: 600; flex-shrink: 0;
+  }
+  .name-cell { display: flex; align-items: center; gap: 10px; }
+  .name-text { color: var(--ivory); font-weight: 500; }
+
+  .type-badge {
+    display: inline-block; padding: 2px 8px;
+    border-radius: 3px; font-size: 10px; font-weight: 500; letter-spacing: 0.04em;
+  }
+  .type-T { background: #1A4A7A33; color: #4A8ABF; }
+  .type-NT { background: #C8922A22; color: var(--gold); }
+
+  .salary-cell { font-family: var(--mono); font-weight: 500; color: var(--teal-lt); }
+
+  .pagination {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 16px; border-top: 1px solid var(--border);
+    font-size: 12px; color: var(--ivory-faint);
+  }
+  .page-btns { display: flex; gap: 4px; }
+  .page-btn {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 4px; padding: 4px 9px;
+    color: var(--ivory-dim); font-size: 12px; cursor: pointer;
+    transition: all 0.1s;
+  }
+  .page-btn:hover { border-color: var(--gold-dim); color: var(--gold); }
+  .page-btn.active { background: var(--gold); border-color: var(--gold); color: #1A0E00; font-weight: 600; }
+  .page-btn:disabled { opacity: 0.35; cursor: default; }
+
+  /* Analytics tabs */
+  .tab-bar { display: flex; gap: 4px; margin-bottom: 20px; border-bottom: 1px solid var(--border); padding-bottom: 0; }
+  .tab {
+    padding: 8px 18px; cursor: pointer; font-size: 13px; font-weight: 400;
+    color: var(--ivory-dim); border-bottom: 2px solid transparent;
+    margin-bottom: -1px; transition: all 0.15s;
+  }
+  .tab:hover { color: var(--ivory); }
+  .tab.active { color: var(--gold-lt); border-bottom-color: var(--gold); font-weight: 500; }
+
+  /* Charts */
+  .chart-card { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; }
+  .charts-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+  .charts-1col { margin-bottom: 16px; }
+
+  /* Progress bars */
+  .prog-row { margin-bottom: 12px; }
+  .prog-header { display: flex; justify-content: space-between; margin-bottom: 4px; }
+  .prog-label { font-size: 12px; color: var(--ivory-dim); }
+  .prog-val { font-size: 12px; color: var(--gold); font-family: var(--mono); font-weight: 500; }
+  .prog-track { height: 6px; background: var(--bg4); border-radius: 3px; overflow: hidden; }
+  .prog-fill { height: 100%; border-radius: 3px; transition: width 0.6s ease; }
+
+  /* Lookup page */
+  .lookup-wrap { max-width: 680px; }
+  .lookup-input-wrap { position: relative; margin-bottom: 12px; }
+  .lookup-input {
+    width: 100%; background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px 120px 14px 18px;
+    color: var(--ivory); font-size: 16px; font-family: var(--sans); outline: none;
+    transition: border 0.15s;
+  }
+  .lookup-input:focus { border-color: var(--gold-dim); }
+  .lookup-btn {
+    position: absolute; right: 8px; top: 50%; transform: translateY(-50%);
+    background: var(--gold); border: none; border-radius: var(--radius);
+    padding: 8px 18px; color: #1A0E00; font-weight: 600; font-size: 13px; cursor: pointer;
+  }
+  .autocomplete-dropdown {
+    position: absolute; top: 100%; left: 0; right: 0;
+    background: var(--bg2); border: 1px solid var(--gold-dim);
+    border-radius: var(--radius-lg); margin-top: 4px;
+    overflow: hidden; z-index: 50;
+  }
+  .ac-item {
+    padding: 10px 18px; cursor: pointer; font-size: 13px; color: var(--ivory-dim);
+    border-bottom: 1px solid var(--border); transition: background 0.1s;
+  }
+  .ac-item:hover { background: var(--bg4); color: var(--ivory); }
+  .ac-item:last-child { border-bottom: none; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 24px; }
+  .chip {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: 20px; padding: 5px 14px;
+    font-size: 12px; color: var(--ivory-dim); cursor: pointer; transition: all 0.15s;
+  }
+  .chip:hover { border-color: var(--gold-dim); color: var(--gold-lt); }
+
+  .result-card {
+    background: var(--bg2); border: 1px solid var(--gold-dim);
+    border-radius: var(--radius-lg); padding: 24px;
+  }
+  .result-title { font-family: var(--serif); font-size: 26px; font-weight: 600; color: var(--ivory); }
+  .result-sub { font-size: 12px; color: var(--ivory-faint); margin-top: 4px; margin-bottom: 24px; }
+  .stat-trio { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 24px; }
+  .stat-box {
+    background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius-lg); padding: 14px; text-align: center;
+  }
+  .stat-box .sv { font-size: 20px; font-weight: 600; font-family: var(--mono); }
+  .stat-box .sl { font-size: 10px; color: var(--ivory-faint); margin-top: 4px; letter-spacing: 0.07em; }
+  .range-track { position: relative; height: 10px; background: var(--bg4); border-radius: 5px; margin: 8px 0 4px; }
+  .range-fill { position: absolute; height: 100%; background: linear-gradient(90deg, #8B2020, #C8922A, #1A6B5A); border-radius: 5px; left: 0; right: 0; }
+  .range-avg-dot {
+    position: absolute; width: 16px; height: 16px;
+    background: var(--ivory); border: 3px solid var(--gold);
+    border-radius: 50%; top: 50%; transform: translate(-50%, -50%);
+    box-shadow: 0 0 0 2px var(--bg);
+  }
+  .range-labels { display: flex; justify-content: space-between; font-size: 10px; }
+  .sample-emp {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border);
+    border-radius: var(--radius); margin-bottom: 8px;
+  }
+  .sample-emp .sn { font-size: 13px; font-weight: 500; color: var(--ivory); }
+  .sample-emp .sd { font-size: 11px; color: var(--ivory-faint); }
+  .sample-emp .ss { font-family: var(--mono); font-size: 14px; font-weight: 600; color: var(--teal-lt); }
+
+  /* Compare page */
+  .compare-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 20px; }
+  .compare-card {
+    background: var(--bg2); border-radius: var(--radius-lg); padding: 20px;
+  }
+  .compare-card.blue-border { border: 1px solid var(--blue-lt); }
+  .compare-card.gold-border { border: 1px solid var(--gold-dim); }
+  .compare-title { font-family: var(--serif); font-size: 20px; font-weight: 600; margin-bottom: 4px; }
+  .compare-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 8px 0; border-bottom: 1px solid var(--bg4);
+  }
+  .compare-row:last-child { border-bottom: none; }
+  .compare-row .cl { font-size: 12px; color: var(--ivory-faint); }
+  .compare-row .cv { font-family: var(--mono); font-size: 13px; font-weight: 500; }
+  .hth-row { margin-bottom: 16px; }
+  .hth-label { font-size: 11px; color: var(--ivory-faint); margin-bottom: 6px; display: flex; justify-content: space-between; }
+  .hth-bars { display: flex; height: 10px; border-radius: 5px; overflow: hidden; gap: 2px; }
+  .hth-b1 { background: var(--blue-lt); border-radius: 5px; }
+  .hth-b2 { background: var(--gold); border-radius: 5px; }
+  .insight {
+    background: var(--bg3); border: 1px solid var(--border); border-left: 3px solid var(--gold);
+    border-radius: var(--radius); padding: 12px 16px;
+    font-size: 13px; color: var(--ivory-dim); line-height: 1.6;
+  }
+  .insight strong { color: var(--gold-lt); }
+
+  /* Misc */
+  .page { display: none; }
+  .page.active { display: block; }
+  .section-header {
+    display: flex; align-items: baseline; justify-content: space-between;
+    margin-bottom: 18px;
+  }
+  .section-title { font-family: var(--serif); font-size: 24px; font-weight: 600; color: var(--ivory); }
+  .section-sub { font-size: 12px; color: var(--ivory-faint); margin-top: 2px; }
+  .count-badge {
+    background: var(--bg4); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 12px;
+    font-size: 12px; color: var(--ivory-dim);
+  }
+  .count-badge span { color: var(--gold); font-weight: 600; }
+  .no-results { padding: 48px; text-align: center; color: var(--ivory-faint); }
+
+  .preset-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 20px; }
+  .compare-input-row { display: grid; grid-template-columns: 1fr 1fr auto; gap: 12px; margin-bottom: 12px; align-items: end; }
+  .input-group label { font-size: 10px; color: var(--ivory-faint); letter-spacing: 0.08em; display: block; margin-bottom: 6px; }
+  .input-group select { width: 100%; }
+
+  /* Scrollbar */
+  ::-webkit-scrollbar { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg2); }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+  ::-webkit-scrollbar-thumb:hover { background: var(--gold-dim); }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE — HAMBURGER BUTTON
+  ══════════════════════════════════════════ */
+  #hamburger {
+    display: none;
+    position: fixed; top: 12px; left: 12px; z-index: 9000;
+    background: var(--bg2); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 8px 10px;
+    cursor: pointer; flex-direction: column; gap: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.5);
+  }
+  #hamburger span {
+    display: block; width: 20px; height: 2px;
+    background: var(--gold); border-radius: 2px;
+    transition: all 0.25s;
+  }
+  #sidebar-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.6); z-index: 198;
+    backdrop-filter: blur(2px);
+  }
+
+  /* ══════════════════════════════════════════
+     RESPONSIVE — MOBILE BOTTOM NAV
+  ══════════════════════════════════════════ */
+  #bottom-nav {
+    display: none;
+    position: fixed; bottom: 0; left: 0; right: 0; z-index: 300;
+    background: var(--bg2); border-top: 1px solid var(--border);
+    padding: 6px 0 max(6px, env(safe-area-inset-bottom));
+  }
+  .bnav-inner { display: flex; justify-content: space-around; }
+  .bnav-item {
+    display: flex; flex-direction: column; align-items: center; gap: 3px;
+    padding: 6px 10px; cursor: pointer; flex: 1; border-radius: var(--radius);
+    color: var(--ivory-faint); font-size: 10px; letter-spacing: .04em;
+    transition: color 0.15s; user-select: none;
+  }
+  .bnav-item .bnav-icon { font-size: 20px; line-height: 1; }
+  .bnav-item.active { color: var(--gold-lt); }
+  .bnav-item.active .bnav-icon { filter: drop-shadow(0 0 4px var(--gold-dim)); }
+
+  /* ══════════════════════════════════════════
+     BREAKPOINT: TABLET  ≤ 900px
+  ══════════════════════════════════════════ */
+  @media (max-width: 900px) {
+    :root { --sidebar: 200px; }
+
+    #stats-ribbon { grid-template-columns: repeat(4, 1fr); }
+    #stats-ribbon .ribbon-stat:nth-child(n+5) { display: none; }
+
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    .charts-2col { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+
+    #content { padding: 18px 18px; }
+  }
+
+  /* ══════════════════════════════════════════
+     BREAKPOINT: MOBILE  ≤ 640px
+  ══════════════════════════════════════════ */
+  @media (max-width: 640px) {
+    /* Body / layout */
+    html, body { overflow: hidden; }
+    body { font-size: 13px; }
+
+    /* Sidebar becomes a slide-in drawer */
+    #sidebar {
+      width: 260px; min-width: 260px;
+      transform: translateX(-100%);
+      transition: transform 0.28s cubic-bezier(.4,0,.2,1);
+      z-index: 199;
+      box-shadow: 4px 0 20px rgba(0,0,0,.6);
+    }
+    #sidebar.open { transform: translateX(0); }
+    #sidebar-overlay.visible { display: block; }
+
+    /* Hamburger visible on mobile */
+    #hamburger { display: flex; }
+
+    /* Main takes full width */
+    #main { margin-left: 0; }
+
+    /* Topbar adjustments */
+    #topbar { padding: 0 16px 0 52px; height: 52px; }
+    .topbar-title { font-size: 16px; }
+    .topbar-sub { display: none; }
+    .topbar-right .badge:first-child { display: none; }
+
+    /* Stats ribbon: 2×2 on mobile */
+    #stats-ribbon {
+      grid-template-columns: repeat(2, 1fr);
+      padding: 8px 12px;
+    }
+    #stats-ribbon .ribbon-stat { border-right: none; border-bottom: 1px solid var(--border); }
+    #stats-ribbon .ribbon-stat:nth-child(odd) { border-right: 1px solid var(--border); }
+    #stats-ribbon .ribbon-stat:nth-last-child(-n+2) { border-bottom: none; }
+    /* Show only first 4 on mobile */
+    #stats-ribbon .ribbon-stat:nth-child(n+5) { display: none; }
+    .ribbon-stat .rv { font-size: 14px; }
+
+    /* Content padding */
+    #content { padding: 14px 12px 80px; } /* bottom padding for bottom nav */
+
+    /* Filters stack vertically */
+    .filters {
+      grid-template-columns: 1fr !important;
+      gap: 8px;
+    }
+    .filter-row2 {
+      flex-wrap: wrap; gap: 8px;
+    }
+    .filter-row2 input[type="range"] { min-width: 100px; }
+
+    /* KPI grid 2-col */
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+    .kpi .kv { font-size: 18px; }
+
+    /* Charts single col */
+    .charts-2col { grid-template-columns: 1fr; }
+    .compare-grid { grid-template-columns: 1fr; }
+    .compare-input-row { grid-template-columns: 1fr; }
+
+    /* Table: hide less-important columns */
+    #dir-table th:nth-child(1),
+    #dir-table td:nth-child(1) { display: none; } /* emp no */
+    #dir-table th:nth-child(3),
+    #dir-table td:nth-child(3) { display: none; } /* type */
+    #dir-table th:nth-child(4),
+    #dir-table td:nth-child(4) { display: none; } /* dept */
+    td { padding: 8px 10px; }
+    th { padding: 9px 10px; }
+
+    /* Pagination compact */
+    .pagination { flex-direction: column; gap: 8px; align-items: center; }
+
+    /* Section header */
+    .section-header { flex-direction: column; gap: 8px; align-items: flex-start; }
+    .section-title { font-size: 20px; }
+
+    /* Lookup */
+    .lookup-wrap { max-width: 100%; }
+    .lookup-input { font-size: 14px; padding: 12px 90px 12px 14px; }
+
+    /* Compare */
+    .stat-trio { grid-template-columns: 1fr; gap: 10px; }
+
+    /* Analytics tabs scroll horizontally */
+    .tab-bar { overflow-x: auto; -webkit-overflow-scrolling: touch; flex-wrap: nowrap; padding-bottom: 0; }
+    .tab { flex-shrink: 0; padding: 8px 14px; font-size: 12px; }
+
+    /* Top earners filters */
+    #page-topearners .filters { grid-template-columns: 1fr 1fr !important; }
+
+    /* Hide sidebar nav on mobile (use bottom nav instead) */
+    #bottom-nav { display: block; }
+
+    /* Modal */
+    #emp-modal { padding: 10px; align-items: flex-end; }
+    #emp-modal-inner { max-width: 100%; border-radius: var(--radius-lg) var(--radius-lg) 0 0; max-height: 85vh; }
+  }
+
+  /* ══════════════════════════════════════════
+     BREAKPOINT: LARGE DESKTOP  ≥ 1400px
+  ══════════════════════════════════════════ */
+  @media (min-width: 1400px) {
+    :root { --sidebar: 260px; }
+    .kpi-grid { grid-template-columns: repeat(4, 1fr); }
+    #content { padding: 28px 36px; }
+    #stats-ribbon { padding: 10px 36px; }
+    #topbar { padding: 0 36px; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Loading screen -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Loading BHUdata.csv…</div>
+</div>
+
+<!-- Hamburger (mobile only) -->
+<button id="hamburger" onclick="toggleSidebar()" aria-label="Open menu">
+  <span></span><span></span><span></span>
+</button>
+
+<!-- Sidebar overlay (mobile) -->
+<div id="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<!-- Bottom Nav (mobile only) -->
+<nav id="bottom-nav">
+  <div class="bnav-inner">
+    <div class="bnav-item active" data-bpage="directory" onclick="bnavGo('directory')">
+      <span class="bnav-icon">👥</span><span>Directory</span>
+    </div>
+    <div class="bnav-item" data-bpage="analytics" onclick="bnavGo('analytics')">
+      <span class="bnav-icon">📊</span><span>Analytics</span>
+    </div>
+    <div class="bnav-item" data-bpage="topearners" onclick="bnavGo('topearners')">
+      <span class="bnav-icon">🏆</span><span>Top Earn</span>
+    </div>
+    <div class="bnav-item" data-bpage="lookup" onclick="bnavGo('lookup')">
+      <span class="bnav-icon">💰</span><span>Lookup</span>
+    </div>
+    <div class="bnav-item" data-bpage="compare" onclick="bnavGo('compare')">
+      <span class="bnav-icon">⚖️</span><span>Compare</span>
+    </div>
+  </div>
+</nav>
+
+<!-- Sidebar -->
+<nav id="sidebar">
+  <div class="sidebar-brand">
+    <div class="icon">🏛️</div>
+    <h1>BHU Intelligence Hub</h1>
+    <div class="sub">Banaras Hindu University</div>
+  </div>
+  <div class="sidebar-nav">
+    <div class="nav-section-label">Navigation</div>
+    <div class="nav-item active" data-page="directory">
+      <span class="nav-icon">👥</span> Employee Directory
+    </div>
+    <div class="nav-item" data-page="analytics">
+      <span class="nav-icon">📊</span> Analytics Dashboard
+    </div>
+    <div class="nav-item" data-page="topearners">
+      <span class="nav-icon">🏆</span> Top Earners
+    </div>
+    <div class="nav-item" data-page="lookup">
+      <span class="nav-icon">💰</span> Salary Lookup
+    </div>
+    <div class="nav-item" data-page="compare">
+      <span class="nav-icon">⚖️</span> Compare Roles
+    </div>
+  </div>
+  <div class="sidebar-stats" id="sidebar-stats"></div>
+</nav>
+
+<!-- Main -->
+<div id="main">
+  <div id="topbar">
+    <div>
+      <div class="topbar-title" id="topbar-title">Employee Directory</div>
+      <div class="topbar-sub">All employees · Sortable · Filterable · Exportable</div>
+    </div>
+    <div class="topbar-right">
+      <div class="badge">Total: <span id="tb-total">—</span></div>
+      <div class="badge">Avg: <span id="tb-avg">—</span></div>
+    </div>
+  </div>
+
+  <div id="stats-ribbon">
+    <div class="ribbon-stat"><div class="rv" id="rs-total">—</div><div class="rl">Total Staff</div></div>
+    <div class="ribbon-stat"><div class="rv" id="rs-teaching">—</div><div class="rl">Teaching</div></div>
+    <div class="ribbon-stat"><div class="rv" id="rs-nonteaching">—</div><div class="rl">Non-Teaching</div></div>
+    <div class="ribbon-stat"><div class="rv" id="rs-avg">—</div><div class="rl">Avg Salary</div></div>
+    <div class="ribbon-stat"><div class="rv" id="rs-max">—</div><div class="rl">Highest</div></div>
+    <div class="ribbon-stat"><div class="rv" id="rs-min">—</div><div class="rl">Lowest</div></div>
+    <div class="ribbon-stat"><div class="rv" id="rs-depts">—</div><div class="rl">Departments</div></div>
+  </div>
+
+  <div id="content">
+
+    <!-- DIRECTORY PAGE -->
+    <div class="page active" id="page-directory">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Employee Directory</div>
+          <div class="section-sub">Full BHU staff roster — search, filter, sort and export</div>
+        </div>
+        <div class="count-badge">Showing <span id="dir-count">0</span> employees</div>
+      </div>
+
+      <div class="filters">
+        <div class="search-wrap">
+          <span class="search-icon">🔍</span>
+          <input type="text" id="search" placeholder="Search name, emp no, dept, designation…" oninput="applyFilters()" />
+        </div>
+        <select id="filter-type" onchange="applyFilters()">
+          <option value="">All Types</option>
+          <option value="Teaching">Teaching</option>
+          <option value="Non-Teaching">Non-Teaching</option>
+        </select>
+        <select id="filter-dept" onchange="applyFilters()" style="max-width:180px">
+          <option value="">All Departments</option>
+        </select>
+        <button class="btn" onclick="resetFilters()">Reset</button>
+        <button class="btn btn-gold" onclick="exportCSV()">⬇ Export CSV</button>
+        <div class="filter-row2" style="grid-column:1/-1">
+          <span style="font-size:11px;color:var(--ivory-faint);white-space:nowrap">Salary range:</span>
+          <input type="range" id="sal-min" min="0" max="400000" step="5000" value="0" oninput="applyFilters();updateRangeLabels()" />
+          <span id="sal-min-lbl" style="font-size:11px;color:var(--gold);font-family:var(--mono);white-space:nowrap">₹0</span>
+          <span style="font-size:11px;color:var(--ivory-faint)">—</span>
+          <input type="range" id="sal-max" min="0" max="400000" step="5000" value="400000" oninput="applyFilters();updateRangeLabels()" />
+          <span id="sal-max-lbl" style="font-size:11px;color:var(--gold);font-family:var(--mono);white-space:nowrap">₹4L+</span>
+          <span id="sal-max-note" style="font-size:10px;color:var(--ivory-faint);font-style:italic"></span>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <div class="tbl-scroll">
+          <table id="dir-table">
+            <thead>
+              <tr>
+                <th onclick="sortTable('empNo')" id="th-empNo">Emp No</th>
+                <th onclick="sortTable('name')" id="th-name">Name</th>
+                <th onclick="sortTable('staffType')" id="th-staffType">Type</th>
+                <th onclick="sortTable('dept')" id="th-dept">Department</th>
+                <th onclick="sortTable('designation')" id="th-designation">Designation</th>
+                <th onclick="sortTable('salary')" id="th-salary">Gross Salary</th>
+              </tr>
+            </thead>
+            <tbody id="dir-tbody"></tbody>
+          </table>
+        </div>
+        <div class="pagination" id="pagination"></div>
+      </div>
+    </div>
+
+    <!-- ANALYTICS PAGE -->
+    <div class="page" id="page-analytics">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Analytics Dashboard</div>
+          <div class="section-sub">Visualise salary distributions, designations and departmental breakdowns</div>
+        </div>
+      </div>
+      <div class="tab-bar">
+        <div class="tab active" data-atab="overview" onclick="switchAnalyticsTab('overview')">Overview</div>
+        <div class="tab" data-atab="designations" onclick="switchAnalyticsTab('designations')">Designations</div>
+        <div class="tab" data-atab="departments" onclick="switchAnalyticsTab('departments')">Departments</div>
+        <div class="tab" data-atab="distribution" onclick="switchAnalyticsTab('distribution')">Salary Bands</div>
+      </div>
+      <div id="analytics-content"></div>
+    </div>
+
+    <!-- LOOKUP PAGE -->
+    <div class="page" id="page-lookup">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Salary Lookup</div>
+          <div class="section-sub">Search any designation to see its salary statistics</div>
+        </div>
+      </div>
+      <div class="lookup-wrap">
+        <div style="font-size:10px;color:var(--ivory-faint);letter-spacing:.08em;margin-bottom:8px">POPULAR ROLES</div>
+        <div class="chips" id="lookup-chips"></div>
+        <div class="lookup-input-wrap">
+          <input class="lookup-input" type="text" id="lookup-input" placeholder="Type a designation…" oninput="lookupAutocomplete()" onkeydown="if(event.key==='Enter')doLookup()" />
+          <button class="lookup-btn" onclick="doLookup()">Search</button>
+          <div class="autocomplete-dropdown" id="ac-drop" style="display:none"></div>
+        </div>
+        <div id="lookup-result"></div>
+      </div>
+    </div>
+
+    <!-- TOP EARNERS PAGE -->
+    <div class="page" id="page-topearners">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Top Earners</div>
+          <div class="section-sub">Highest paid staff across all or selective roles</div>
+        </div>
+      </div>
+
+      <!-- Role filter -->
+      <div class="filters" style="grid-template-columns:auto 1fr auto auto;gap:12px;margin-bottom:20px;align-items:center">
+        <span style="font-size:11px;color:var(--ivory-faint);white-space:nowrap;letter-spacing:.07em">FILTER BY ROLE</span>
+        <select id="te-role" onchange="buildTopEarners()" style="width:100%">
+          <option value="">All Roles</option>
+        </select>
+        <select id="te-count" onchange="buildTopEarners()" style="min-width:100px">
+          <option value="10">Top 10</option>
+          <option value="25" selected>Top 25</option>
+          <option value="50">Top 50</option>
+          <option value="100">Top 100</option>
+        </select>
+        <select id="te-type" onchange="buildTopEarners()">
+          <option value="">All Types</option>
+          <option value="Teaching">Teaching</option>
+          <option value="Non-Teaching">Non-Teaching</option>
+        </select>
+      </div>
+
+      <div id="te-content"></div>
+    </div>
+
+    <!-- COMPARE PAGE -->
+    <div class="page" id="page-compare">
+      <div class="section-header">
+        <div>
+          <div class="section-title">Compare Roles</div>
+          <div class="section-sub">Side-by-side salary analysis of any two designations</div>
+        </div>
+      </div>
+      <div style="font-size:10px;color:var(--ivory-faint);letter-spacing:.08em;margin-bottom:8px">QUICK PRESETS</div>
+      <div class="preset-chips" id="preset-chips"></div>
+      <div class="compare-input-row">
+        <div class="input-group">
+          <label>Role 1</label>
+          <select id="cmp-role1" onchange="doCompare()"><option value="">— Select —</option></select>
+        </div>
+        <div class="input-group">
+          <label>Role 2</label>
+          <select id="cmp-role2" onchange="doCompare()"><option value="">— Select —</option></select>
+        </div>
+        <button class="btn btn-gold" onclick="doCompare()">Compare</button>
+      </div>
+      <div id="compare-result"></div>
+    </div>
+
+  </div><!-- /content -->
+</div><!-- /main -->
+
+<div id="emp-modal" style="display:none;position:fixed;inset:0;z-index:9000;background:rgba(0,0,0,0.75);backdrop-filter:blur(4px);display:none;align-items:center;justify-content:center;padding:20px">
+  <div id="emp-modal-inner" style="background:var(--bg2);border:1px solid var(--gold-dim);border-radius:var(--radius-lg);padding:32px;max-width:520px;width:100%;position:relative;max-height:90vh;overflow-y:auto">
+    <button onclick="closeEmpModal()" style="position:absolute;top:16px;right:16px;background:var(--bg4);border:1px solid var(--border);border-radius:50%;width:32px;height:32px;color:var(--ivory-dim);font-size:18px;cursor:pointer;display:flex;align-items:center;justify-content:center;line-height:1">×</button>
+    <div id="emp-modal-content"></div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  GLOBALS
+// ══════════════════════════════════════════════
+let ALL = [];
+let FILTERED = [];
+let SORT_COL = 'name', SORT_DIR = 1;
+let CUR_PAGE = 1;
+const PER_PAGE = 25;
+let analyticsTab = 'overview';
+let charts = {};
+
+const fmt  = n => '₹' + Math.round(n).toLocaleString('en-IN');
+const fmtK = n => n >= 100000 ? '₹' + (n/100000).toFixed(1) + 'L'
+                : n >= 1000   ? '₹' + (n/1000).toFixed(0) + 'K'
+                : '₹' + Math.round(n);
+
+function avg(arr) { return arr.length ? arr.reduce((a,b)=>a+b,0)/arr.length : 0; }
+
+const COLORS = ['#C8922A','#1A4A7A','#1A6B5A','#8B2020','#5A2A7A',
+                '#1A6A5A','#7A5A1A','#2A5A8B','#5A1A2A','#2A7A4A'];
+
+// ══════════════════════════════════════════════
+//  CSV PARSER
+// ══════════════════════════════════════════════
+function parseCSV(text) {
+  const lines = text.replace(/\r/g,'').split('\n');
+  const rows = [];
+  let i = 1; // skip header
+  while (i < lines.length) {
+    let line = lines[i].trim();
+    if (!line) { i++; continue; }
+    // merge continuation lines (multi-line quoted fields)
+    while ((line.match(/"/g)||[]).length % 2 !== 0 && i+1 < lines.length) {
+      i++;
+      line += ' ' + lines[i].trim();
+    }
+    // parse CSV fields
+    const fields = [];
+    let cur = '', inQ = false;
+    for (let c = 0; c < line.length; c++) {
+      if (line[c] === '"') { inQ = !inQ; }
+      else if (line[c] === ',' && !inQ) { fields.push(cur.trim()); cur = ''; }
+      else cur += line[c];
+    }
+    fields.push(cur.trim());
+    if (fields.length >= 7) {
+      const salary = parseInt(fields[6].replace(/[^\d]/g,'')) || 0;
+      rows.push({
+        sno: fields[0],
+        empNo: fields[1],
+        name: fields[2].replace(/\n/g,' ').trim(),
+        staffType: fields[3].trim(),
+        dept: fields[4].replace(/\n/g,' ').trim(),
+        designation: fields[5].replace(/\n/g,' ').trim(),
+        salary
+      });
+    }
+    i++;
+  }
+  return rows;
+}
+
+// ══════════════════════════════════════════════
+//  LOAD CSV
+// ══════════════════════════════════════════════
+window.addEventListener('DOMContentLoaded', () => {
+  fetch('BHUdata.csv')
+    .then(r => { if (!r.ok) throw new Error('CSV not found'); return r.text(); })
+    .then(text => {
+      ALL = parseCSV(text);
+      init();
+      document.getElementById('loading').style.display = 'none';
+    })
+    .catch(err => {
+      document.getElementById('loading').innerHTML =
+        `<div style="color:#C44040;font-size:14px;text-align:center">
+          ❌ Could not load BHUdata.csv<br>
+          <small style="color:var(--ivory-faint);margin-top:8px;display:block">
+            Make sure BHUdata.csv is in the same folder as this HTML file<br>
+            and open via a local server (not file://).
+          </small>
+        </div>`;
+    });
+});
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function init() {
+  computeStats();
+  calibrateSalarySlider();
+  populateDeptFilter();
+  populateCompareDropdowns();
+  populatePresetChips();
+  populateLookupChips();
+  populateTopEarnersDropdowns();
+  applyFilters();
+  buildAnalytics('overview');
+}
+
+function calibrateSalarySlider() {
+  const maxSal = Math.max(...ALL.map(r=>r.salary).filter(s=>s>0));
+  // Round up to nearest 10K
+  const sliderMax = Math.ceil(maxSal / 10000) * 10000;
+  const salMin = document.getElementById('sal-min');
+  const salMax = document.getElementById('sal-max');
+  salMin.max = sliderMax;
+  salMax.max = sliderMax;
+  salMax.value = sliderMax;
+  updateRangeLabels();
+}
+
+function computeStats() {
+  const salaries = ALL.map(r=>r.salary).filter(s=>s>0);
+  const teaching = ALL.filter(r=>r.staffType==='Teaching');
+  const nonT = ALL.filter(r=>r.staffType==='Non-Teaching');
+  const depts = new Set(ALL.map(r=>r.dept)).size;
+
+  const avgSal = Math.round(avg(salaries));
+  const maxSal = Math.max(...salaries);
+  const minSal = Math.min(...salaries.filter(s=>s>0));
+  const payroll = salaries.reduce((a,b)=>a+b,0);
+
+  // ribbon
+  document.getElementById('rs-total').textContent     = ALL.length.toLocaleString();
+  document.getElementById('rs-teaching').textContent  = teaching.length.toLocaleString();
+  document.getElementById('rs-nonteaching').textContent = nonT.length.toLocaleString();
+  document.getElementById('rs-avg').textContent       = fmtK(avgSal);
+  document.getElementById('rs-max').textContent       = fmtK(maxSal);
+  document.getElementById('rs-min').textContent       = fmtK(minSal);
+  document.getElementById('rs-depts').textContent     = depts;
+
+  // topbar badges
+  document.getElementById('tb-total').textContent = ALL.length.toLocaleString();
+  document.getElementById('tb-avg').textContent   = fmtK(avgSal);
+
+  // sidebar
+  document.getElementById('sidebar-stats').innerHTML = `
+    <div class="sidebar-stat"><div class="val">${ALL.length.toLocaleString()}</div><div class="lbl">Total Employees</div></div>
+    <div class="sidebar-stat"><div class="val">${fmtK(payroll)}</div><div class="lbl">Monthly Payroll</div></div>
+    <div class="sidebar-stat"><div class="val">${new Set(ALL.map(r=>r.designation)).size}</div><div class="lbl">Designations</div></div>
+  `;
+}
+
+function populateDeptFilter() {
+  const sel = document.getElementById('filter-dept');
+  const depts = [...new Set(ALL.map(r=>r.dept))].sort();
+  depts.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d.length > 30 ? d.slice(0,28)+'…' : d;
+    sel.appendChild(o);
+  });
+}
+
+// ══════════════════════════════════════════════
+//  DIRECTORY FILTERS + TABLE
+// ══════════════════════════════════════════════
+function applyFilters() {
+  const q     = document.getElementById('search').value.toLowerCase();
+  const type  = document.getElementById('filter-type').value;
+  const dept  = document.getElementById('filter-dept').value;
+  const sMin  = +document.getElementById('sal-min').value;
+  const sMax  = +document.getElementById('sal-max').value;
+
+  FILTERED = ALL.filter(r => {
+    if (type && r.staffType !== type) return false;
+    if (dept && r.dept !== dept) return false;
+    if (r.salary < sMin || r.salary > sMax) return false;
+    if (q && !r.name.toLowerCase().includes(q) &&
+             !r.empNo.includes(q) &&
+             !r.dept.toLowerCase().includes(q) &&
+             !r.designation.toLowerCase().includes(q)) return false;
+    return true;
+  });
+
+  sortFiltered();
+  CUR_PAGE = 1;
+  renderTable();
+}
+
+function sortTable(col) {
+  if (SORT_COL === col) SORT_DIR *= -1;
+  else { SORT_COL = col; SORT_DIR = 1; }
+  document.querySelectorAll('th').forEach(t => t.classList.remove('sorted'));
+  document.getElementById('th-'+col)?.classList.add('sorted');
+  sortFiltered();
+  CUR_PAGE = 1;
+  renderTable();
+}
+
+function sortFiltered() {
+  FILTERED.sort((a,b) => {
+    let va = a[SORT_COL], vb = b[SORT_COL];
+    if (typeof va === 'string') va = va.toLowerCase();
+    if (typeof vb === 'string') vb = vb.toLowerCase();
+    return va < vb ? -SORT_DIR : va > vb ? SORT_DIR : 0;
+  });
+}
+
+const AVATAR_BG = ['#C8922A33','#1A4A7A33','#1A6B5A33','#8B202033','#5A2A7A33'];
+const AVATAR_FG = ['#E8A84B','#4A8ABF','#2DA88C','#C44040','#8A52CF'];
+
+function initials(name) {
+  return name.split(' ').filter(w=>w).slice(0,2).map(w=>w[0]).join('').toUpperCase();
+}
+function avatarColors(empNo) {
+  const i = parseInt(empNo) % 5;
+  return [AVATAR_BG[i], AVATAR_FG[i]];
+}
+
+function renderTable() {
+  const tbody = document.getElementById('dir-tbody');
+  const total = FILTERED.length;
+  document.getElementById('dir-count').textContent = total.toLocaleString();
+
+  const start = (CUR_PAGE-1)*PER_PAGE;
+  const rows  = FILTERED.slice(start, start+PER_PAGE);
+
+  if (!rows.length) {
+    tbody.innerHTML = `<tr><td colspan="6" class="no-results">No employees match your filters.</td></tr>`;
+    document.getElementById('pagination').innerHTML = '';
+    return;
+  }
+
+  tbody.innerHTML = rows.map(r => {
+    const [abg, afg] = avatarColors(r.empNo);
+    return `
+    <tr>
+      <td class="mono">${r.empNo}</td>
+      <td>
+        <div class="name-cell">
+          <div class="avatar" style="background:${abg};color:${afg}">${initials(r.name)}</div>
+          <span class="name-text name-link" onclick="openEmpModal('${r.empNo.replace(/'/g,"\\'")}')"style="cursor:pointer;text-decoration:underline;text-decoration-color:var(--gold-dim);text-underline-offset:3px" title="View employee card">${r.name}</span>
+        </div>
+      </td>
+      <td><span class="type-badge ${r.staffType==='Teaching'?'type-T':'type-NT'}">${r.staffType==='Teaching'?'Teaching':'Non-Teaching'}</span></td>
+      <td style="color:var(--ivory-dim);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" title="${r.dept}">${r.dept}</td>
+      <td style="color:var(--ivory-dim)">${r.designation}</td>
+      <td class="salary-cell">${fmt(r.salary)}</td>
+    </tr>`;
+  }).join('');
+
+  // Pagination
+  const totalPages = Math.ceil(total/PER_PAGE);
+  let pages = '';
+  const pArr = [];
+  pArr.push(1);
+  for (let p=Math.max(2,CUR_PAGE-1); p<=Math.min(totalPages-1,CUR_PAGE+1); p++) pArr.push(p);
+  if (totalPages > 1) pArr.push(totalPages);
+
+  const pag = document.getElementById('pagination');
+  let btns = `<div class="page-btns">
+    <button class="page-btn" onclick="goPage(${CUR_PAGE-1})" ${CUR_PAGE===1?'disabled':''}>‹</button>`;
+
+  let prev = 0;
+  pArr.forEach(p => {
+    if (p - prev > 1) btns += `<span style="color:var(--ivory-faint);padding:4px 2px">…</span>`;
+    btns += `<button class="page-btn ${p===CUR_PAGE?'active':''}" onclick="goPage(${p})">${p}</button>`;
+    prev = p;
+  });
+  btns += `<button class="page-btn" onclick="goPage(${CUR_PAGE+1})" ${CUR_PAGE===totalPages?'disabled':''}>›</button></div>`;
+
+  pag.innerHTML = `<span>Showing ${start+1}–${Math.min(start+PER_PAGE,total)} of <strong style="color:var(--gold)">${total.toLocaleString()}</strong></span>${btns}`;
+}
+
+function goPage(p) {
+  const total = Math.ceil(FILTERED.length/PER_PAGE);
+  if (p < 1 || p > total) return;
+  CUR_PAGE = p; renderTable();
+}
+
+function resetFilters() {
+  document.getElementById('search').value = '';
+  document.getElementById('filter-type').value = '';
+  document.getElementById('filter-dept').value = '';
+  document.getElementById('sal-min').value = 0;
+  document.getElementById('sal-max').value = document.getElementById('sal-max').max;
+  updateRangeLabels();
+  applyFilters();
+}
+
+function updateRangeLabels() {
+  const mn = +document.getElementById('sal-min').value;
+  const mx = +document.getElementById('sal-max').value;
+  document.getElementById('sal-min-lbl').textContent = fmtK(mn);
+  document.getElementById('sal-max-lbl').textContent = fmtK(mx);
+}
+
+function exportCSV() {
+  const hdr = 'Emp No,Name,Staff Type,Department,Designation,Gross Salary\n';
+  const body = FILTERED.map(r =>
+    `${r.empNo},"${r.name}",${r.staffType},"${r.dept}","${r.designation}",${r.salary}`
+  ).join('\n');
+  const blob = new Blob([hdr+body], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'BHU_Filtered_Export.csv';
+  a.click();
+}
+
+// ══════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════
+const PAGE_TITLES = {
+  directory:  ['Employee Directory','Full BHU staff roster — search, filter, sort and export'],
+  analytics:  ['Analytics Dashboard','Visual breakdowns of salary, departments and designations'],
+  topearners: ['Top Earners','Highest paid staff across all roles or a specific designation'],
+  lookup:     ['Salary Lookup','Search any designation to see its salary statistics'],
+  compare:    ['Compare Roles','Side-by-side salary analysis of any two designations'],
+};
+
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const pg = el.dataset.page;
+    document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+    el.classList.add('active');
+    document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+    document.getElementById('page-'+pg).classList.add('active');
+    const [t,s] = PAGE_TITLES[pg];
+    document.getElementById('topbar-title').textContent = t;
+    document.querySelector('#topbar .topbar-sub').textContent = s;
+    if (pg === 'analytics') buildAnalytics(analyticsTab);
+    if (pg === 'topearners') buildTopEarners();
+  });
+});
+
+// ══════════════════════════════════════════════
+//  ANALYTICS
+// ══════════════════════════════════════════════
+function switchAnalyticsTab(tab) {
+  analyticsTab = tab;
+  document.querySelectorAll('.tab').forEach(t => {
+    t.classList.toggle('active', t.dataset.atab === tab);
+  });
+  buildAnalytics(tab);
+}
+
+function destroyChart(id) {
+  if (charts[id]) { charts[id].destroy(); delete charts[id]; }
+}
+
+function makeChart(id, config) {
+  destroyChart(id);
+  const canvas = document.getElementById(id);
+  if (canvas) charts[id] = new Chart(canvas, config);
+}
+
+// Pre-compute analytics data
+function getDesignationStats() {
+  const map = {};
+  ALL.forEach(r => {
+    if (!map[r.designation]) map[r.designation] = {salaries:[], count:0};
+    map[r.designation].salaries.push(r.salary);
+    map[r.designation].count++;
+  });
+  return Object.entries(map).map(([d,v]) => ({
+    designation: d, count: v.count,
+    avg: Math.round(avg(v.salaries)),
+    max: Math.max(...v.salaries),
+    min: Math.min(...v.salaries),
+  })).sort((a,b) => b.avg - a.avg);
+}
+
+function getDeptStats() {
+  const map = {};
+  ALL.forEach(r => {
+    if (!map[r.dept]) map[r.dept] = {salaries:[], count:0};
+    map[r.dept].salaries.push(r.salary);
+    map[r.dept].count++;
+  });
+  return Object.entries(map).map(([d,v]) => ({
+    dept: d, count: v.count,
+    avg: Math.round(avg(v.salaries)),
+  })).sort((a,b) => b.count - a.count);
+}
+
+function getSalaryBuckets() {
+  const buckets = [
+    {l:0,     h:50000,  lbl:'< 50K'},
+    {l:50000, h:100000, lbl:'50–100K'},
+    {l:100000,h:150000, lbl:'100–150K'},
+    {l:150000,h:200000, lbl:'150–200K'},
+    {l:200000,h:250000, lbl:'200–250K'},
+    {l:250000,h:300000, lbl:'250–300K'},
+    {l:300000,h:999999, lbl:'300K+'},
+  ];
+  return buckets.map(b => ({
+    ...b, count: ALL.filter(r=>r.salary>=b.l && r.salary<b.h).length
+  }));
+}
+
+function buildAnalytics(tab) {
+  const el = document.getElementById('analytics-content');
+
+  if (tab === 'overview') {
+    const salaries = ALL.map(r=>r.salary).filter(s=>s>0);
+    const teaching = ALL.filter(r=>r.staffType==='Teaching');
+    const nonT = ALL.filter(r=>r.staffType==='Non-Teaching');
+    const buckets = getSalaryBuckets();
+
+    el.innerHTML = `
+      <div class="kpi-grid">
+        <div class="kpi"><div class="kv" style="color:var(--teal-lt)">${fmt(Math.round(avg(salaries)))}</div><div class="kl">Average Salary</div></div>
+        <div class="kpi"><div class="kv" style="color:var(--gold)">${fmt(Math.max(...salaries))}</div><div class="kl">Highest Salary</div></div>
+        <div class="kpi"><div class="kv" style="color:var(--red-lt)">${fmt(Math.min(...salaries.filter(s=>s>0)))}</div><div class="kl">Lowest Salary</div></div>
+        <div class="kpi"><div class="kv" style="color:var(--blue-lt)">${fmtK(salaries.reduce((a,b)=>a+b,0))}</div><div class="kl">Total Payroll</div></div>
+      </div>
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="card-title">Salary distribution</div>
+          <div style="position:relative;height:240px"><canvas id="ch-hist" role="img" aria-label="Salary distribution histogram"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-title">Teaching vs Non-Teaching</div>
+          <div style="position:relative;height:180px"><canvas id="ch-donut" role="img" aria-label="Teaching vs Non-Teaching donut chart"></canvas></div>
+          <div style="display:flex;justify-content:center;gap:20px;margin-top:14px;font-size:12px">
+            <span><span style="display:inline-block;width:10px;height:10px;background:#1A4A7A;border-radius:2px;margin-right:5px"></span>Teaching: <strong style="color:var(--blue-lt)">${teaching.length}</strong></span>
+            <span><span style="display:inline-block;width:10px;height:10px;background:#C8922A;border-radius:2px;margin-right:5px"></span>Non-Teaching: <strong style="color:var(--gold)">${nonT.length}</strong></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-bottom:16px">
+        <div class="card-title" style="display:flex;align-items:center;justify-content:space-between">
+          <span>🏆 Top 10 Earners — All Staff</span>
+          <span style="font-size:10px;color:var(--ivory-faint);cursor:pointer;text-decoration:underline" onclick="document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));document.querySelector('[data-page=topearners]').classList.add('active');document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));document.getElementById('page-topearners').classList.add('active');buildTopEarners();">View all →</span>
+        </div>
+        ${(() => {
+          const top10 = ALL.filter(r=>r.salary>0).sort((a,b)=>b.salary-a.salary).slice(0,10);
+          const maxS = top10[0]?.salary || 1;
+          return top10.map((r,i) => {
+            const [abg,afg] = avatarColors(r.empNo);
+            const medal = i===0?'🥇':i===1?'🥈':i===2?'🥉':`<span style="font-size:10px;color:var(--ivory-faint);font-family:var(--mono)">#${i+1}</span>`;
+            return `<div style="display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid var(--bg3)">
+              <div style="width:24px;text-align:center;flex-shrink:0">${medal}</div>
+              <div class="avatar" style="background:${abg};color:${afg};flex-shrink:0">${initials(r.name)}</div>
+              <div style="flex:1;min-width:0">
+                <div style="display:flex;gap:8px;align-items:baseline;flex-wrap:wrap">
+                  <span class="name-text name-link" onclick="openEmpModal('${r.empNo.replace(/'/g,"\\'")}')") style="cursor:pointer;text-decoration:underline;text-decoration-color:var(--gold-dim);text-underline-offset:2px;font-size:13px">${r.name}</span>
+                  <span style="font-size:10px;color:var(--ivory-faint)">${r.designation}</span>
+                </div>
+                <div style="height:3px;background:var(--bg4);border-radius:2px;margin-top:4px;overflow:hidden">
+                  <div style="width:${Math.round(r.salary/maxS*100)}%;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-lt));border-radius:2px"></div>
+                </div>
+              </div>
+              <div style="font-family:var(--mono);font-size:13px;font-weight:600;color:var(--teal-lt);white-space:nowrap">${fmt(r.salary)}</div>
+            </div>`;
+          }).join('');
+        })()}
+      </div>`;
+
+    setTimeout(() => {
+      makeChart('ch-hist', {
+        type:'bar',
+        data:{
+          labels: buckets.map(b=>b.lbl),
+          datasets:[{
+            label:'Employees', data: buckets.map(b=>b.count),
+            backgroundColor: COLORS.map(c=>c+'99'),
+            borderColor: COLORS, borderWidth:1, borderRadius:4
+          }]
+        },
+        options:{
+          responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#5A4E42'},grid:{color:'#1E160E'}},
+            y:{ticks:{color:'#5A4E42'},grid:{color:'#1E160E'}}
+          }
+        }
+      });
+      makeChart('ch-donut', {
+        type:'doughnut',
+        data:{
+          labels:['Teaching','Non-Teaching'],
+          datasets:[{data:[teaching.length,nonT.length],backgroundColor:['#1A4A7A','#C8922A'],borderWidth:0,hoverOffset:6}]
+        },
+        options:{responsive:true,maintainAspectRatio:false,cutout:'65%',plugins:{legend:{display:false}}}
+      });
+    }, 100);
+  }
+
+  else if (tab === 'designations') {
+    const ds = getDesignationStats().slice(0,15);
+    el.innerHTML = `
+      <div class="chart-card charts-1col">
+        <div class="card-title">Top 15 designations by average salary</div>
+        <div style="position:relative;height:${ds.length*42+60}px"><canvas id="ch-desg" role="img" aria-label="Designations by average salary"></canvas></div>
+      </div>
+      <div class="card">
+        <div class="card-title">All designations — salary table</div>
+        <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:12px">
+          <thead><tr style="border-bottom:1px solid var(--border)">
+            <th style="padding:8px 12px;text-align:left;color:var(--ivory-faint);font-size:10px;font-weight:500">Designation</th>
+            <th style="padding:8px 12px;text-align:right;color:var(--ivory-faint);font-size:10px;font-weight:500">Count</th>
+            <th style="padding:8px 12px;text-align:right;color:var(--ivory-faint);font-size:10px;font-weight:500">Min</th>
+            <th style="padding:8px 12px;text-align:right;color:var(--ivory-faint);font-size:10px;font-weight:500">Average</th>
+            <th style="padding:8px 12px;text-align:right;color:var(--ivory-faint);font-size:10px;font-weight:500">Max</th>
+          </tr></thead>
+          <tbody>${getDesignationStats().map(d=>`
+            <tr style="border-bottom:1px solid var(--bg3)">
+              <td style="padding:7px 12px;color:var(--ivory-dim)">${d.designation}</td>
+              <td style="padding:7px 12px;text-align:right;color:var(--ivory-faint)">${d.count}</td>
+              <td style="padding:7px 12px;text-align:right;color:var(--red-lt);font-family:var(--mono)">${fmt(d.min)}</td>
+              <td style="padding:7px 12px;text-align:right;color:var(--gold);font-family:var(--mono);font-weight:600">${fmt(d.avg)}</td>
+              <td style="padding:7px 12px;text-align:right;color:var(--teal-lt);font-family:var(--mono)">${fmt(d.max)}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+    setTimeout(() => {
+      makeChart('ch-desg', {
+        type:'bar',
+        data:{
+          labels: ds.map(d=>d.designation.length>22?d.designation.slice(0,20)+'…':d.designation),
+          datasets:[{
+            label:'Avg Salary', data: ds.map(d=>d.avg),
+            backgroundColor:'#C8922A66', borderColor:'#C8922A', borderWidth:1, borderRadius:4
+          }]
+        },
+        options:{
+          indexAxis:'y', responsive:true, maintainAspectRatio:false,
+          plugins:{legend:{display:false}},
+          scales:{
+            x:{ticks:{color:'#5A4E42',callback:v=>'₹'+Math.round(v/1000)+'K'},grid:{color:'#1E160E'}},
+            y:{ticks:{color:'#A09080',font:{size:11}},grid:{display:false}}
+          }
+        }
+      });
+    }, 100);
+  }
+
+  else if (tab === 'departments') {
+    const ds = getDeptStats().slice(0,15);
+    const maxCount = Math.max(...ds.map(d=>d.count));
+    el.innerHTML = `
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="card-title">Top 15 departments by headcount</div>
+          <div style="position:relative;height:${ds.length*34+60}px"><canvas id="ch-dept-count" role="img" aria-label="Departments by employee count"></canvas></div>
+        </div>
+        <div class="chart-card">
+          <div class="card-title">Top 15 departments by avg salary</div>
+          <div style="position:relative;height:${ds.length*34+60}px"><canvas id="ch-dept-avg" role="img" aria-label="Departments by average salary"></canvas></div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Department headcount breakdown</div>
+        ${ds.map((d,i)=>`
+          <div class="prog-row">
+            <div class="prog-header">
+              <span class="prog-label" title="${d.dept}">${d.dept.length>35?d.dept.slice(0,33)+'…':d.dept}</span>
+              <span class="prog-val">${d.count} employees · ${fmt(d.avg)}</span>
+            </div>
+            <div class="prog-track">
+              <div class="prog-fill" style="width:${Math.round(d.count/maxCount*100)}%;background:${COLORS[i%COLORS.length]}"></div>
+            </div>
+          </div>`).join('')}
+      </div>`;
+    setTimeout(() => {
+      makeChart('ch-dept-count', {
+        type:'bar',
+        data:{
+          labels: ds.map(d=>d.dept.length>18?d.dept.slice(0,16)+'…':d.dept),
+          datasets:[{data:ds.map(d=>d.count),backgroundColor:COLORS.map(c=>c+'88'),borderRadius:3}]
+        },
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+          scales:{x:{ticks:{color:'#5A4E42'},grid:{color:'#1E160E'}},y:{ticks:{color:'#A09080',font:{size:10}},grid:{display:false}}}}
+      });
+      makeChart('ch-dept-avg', {
+        type:'bar',
+        data:{
+          labels: ds.map(d=>d.dept.length>18?d.dept.slice(0,16)+'…':d.dept),
+          datasets:[{data:ds.map(d=>d.avg),backgroundColor:'#1A4A7A88',borderColor:'#1A4A7A',borderWidth:1,borderRadius:3}]
+        },
+        options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+          scales:{x:{ticks:{color:'#5A4E42',callback:v=>'₹'+Math.round(v/1000)+'K'},grid:{color:'#1E160E'}},y:{ticks:{color:'#A09080',font:{size:10}},grid:{display:false}}}}
+      });
+    }, 100);
+  }
+
+  else if (tab === 'distribution') {
+    const buckets = getSalaryBuckets();
+    const total = ALL.length;
+    const teaching = ALL.filter(r=>r.staffType==='Teaching');
+    const nonT = ALL.filter(r=>r.staffType==='Non-Teaching');
+    const tSal = teaching.map(r=>r.salary).filter(s=>s>0);
+    const ntSal = nonT.map(r=>r.salary).filter(s=>s>0);
+
+    el.innerHTML = `
+      <div class="charts-2col">
+        <div class="chart-card">
+          <div class="card-title">Salary bands — employee count</div>
+          ${buckets.map((b,i)=>{
+            const pct = Math.round(b.count/total*100);
+            return `
+            <div class="prog-row">
+              <div class="prog-header">
+                <span class="prog-label">₹${b.lbl}</span>
+                <span class="prog-val">${b.count} (${pct}%)</span>
+              </div>
+              <div class="prog-track">
+                <div class="prog-fill" style="width:${pct}%;background:${COLORS[i]}"></div>
+              </div>
+            </div>`;
+          }).join('')}
+        </div>
+        <div class="chart-card">
+          <div class="card-title">Teaching vs Non-Teaching salary profile</div>
+          <div style="position:relative;height:220px"><canvas id="ch-dist-cmp" role="img" aria-label="Salary comparison between teaching and non-teaching"></canvas></div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px">
+            ${[['Teaching',tSal,'#4A8ABF'],['Non-Teaching',ntSal,'#E8A84B']].map(([label,arr,color])=>`
+              <div style="background:var(--bg3);border-radius:var(--radius);padding:10px;border:1px solid var(--border)">
+                <div style="font-size:10px;color:var(--ivory-faint);margin-bottom:4px">${label}</div>
+                <div style="font-size:14px;font-weight:600;color:${color};font-family:var(--mono)">${fmt(Math.round(avg(arr)))}</div>
+                <div style="font-size:10px;color:var(--ivory-faint)">avg · ${arr.length} staff</div>
+              </div>`).join('')}
+          </div>
+        </div>
+      </div>
+      <div class="charts-1col chart-card">
+        <div class="card-title">Salary distribution — all staff (pie)</div>
+        <div style="display:grid;grid-template-columns:260px 1fr;gap:20px;align-items:center">
+          <div style="position:relative;height:260px"><canvas id="ch-dist-pie" role="img" aria-label="Salary distribution pie chart"></canvas></div>
+          <div>${buckets.map((b,i)=>`
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <span style="display:flex;align-items:center;gap:8px;font-size:12px;color:var(--ivory-dim)">
+                <span style="display:inline-block;width:10px;height:10px;border-radius:2px;background:${COLORS[i]}"></span>₹${b.lbl}
+              </span>
+              <span style="font-size:12px;font-family:var(--mono);color:var(--gold)">${b.count} (${Math.round(b.count/total*100)}%)</span>
+            </div>`).join('')}
+          </div>
+        </div>
+      </div>`;
+
+    setTimeout(() => {
+      makeChart('ch-dist-cmp', {
+        type:'bar',
+        data:{
+          labels:['Min','Average','Max'],
+          datasets:[
+            {label:'Teaching',data:[Math.min(...tSal),Math.round(avg(tSal)),Math.max(...tSal)],backgroundColor:'#1A4A7A99',borderColor:'#1A4A7A',borderWidth:1,borderRadius:4},
+            {label:'Non-Teaching',data:[Math.min(...ntSal),Math.round(avg(ntSal)),Math.max(...ntSal)],backgroundColor:'#C8922A99',borderColor:'#C8922A',borderWidth:1,borderRadius:4}
+          ]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+          scales:{x:{ticks:{color:'#5A4E42'},grid:{color:'#1E160E'}},y:{ticks:{color:'#5A4E42',callback:v=>'₹'+Math.round(v/1000)+'K'},grid:{color:'#1E160E'}}}}
+      });
+      makeChart('ch-dist-pie', {
+        type:'pie',
+        data:{
+          labels:buckets.map(b=>'₹'+b.lbl),
+          datasets:[{data:buckets.map(b=>b.count),backgroundColor:COLORS.slice(0,7),borderWidth:0,hoverOffset:8}]
+        },
+        options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}}}
+      });
+    }, 100);
+  }
+}
+
+// ══════════════════════════════════════════════
+//  SALARY LOOKUP
+// ══════════════════════════════════════════════
+let allDesignations = [];
+
+function populateLookupChips() {
+  allDesignations = [...new Set(ALL.map(r=>r.designation))].sort();
+  const popular = ['Professor','Assistant Professor','Associate Professor','Section Officer','Peon','Nursing Officer','Lab Assistant','Joint Registrar','Assistant Registrar','Senior Assistant'];
+  const chips = document.getElementById('lookup-chips');
+  popular.forEach(r => {
+    if (allDesignations.some(d => d.toLowerCase().includes(r.toLowerCase()))) {
+      const c = document.createElement('div');
+      c.className = 'chip';
+      c.textContent = r;
+      c.onclick = () => { document.getElementById('lookup-input').value = r; doLookup(); };
+      chips.appendChild(c);
+    }
+  });
+}
+
+function lookupAutocomplete() {
+  const q = document.getElementById('lookup-input').value.toLowerCase();
+  const drop = document.getElementById('ac-drop');
+  if (q.length < 2) { drop.style.display='none'; return; }
+  const matches = allDesignations.filter(d=>d.toLowerCase().includes(q)).slice(0,8);
+  if (!matches.length) { drop.style.display='none'; return; }
+  drop.innerHTML = matches.map(m=>`<div class="ac-item" onclick="pickAC('${m.replace(/'/g,"\\'")}')"> ${m}</div>`).join('');
+  drop.style.display = 'block';
+}
+
+function pickAC(val) {
+  document.getElementById('lookup-input').value = val;
+  document.getElementById('ac-drop').style.display = 'none';
+  doLookup();
+}
+
+// ══════════════════════════════════════════════
+//  MOBILE NAV
+// ══════════════════════════════════════════════
+function toggleSidebar() {
+  const s = document.getElementById('sidebar');
+  const o = document.getElementById('sidebar-overlay');
+  const open = s.classList.toggle('open');
+  o.classList.toggle('visible', open);
+}
+
+function closeSidebar() {
+  document.getElementById('sidebar').classList.remove('open');
+  document.getElementById('sidebar-overlay').classList.remove('visible');
+}
+
+function bnavGo(pg) {
+  // sync bottom nav active state
+  document.querySelectorAll('.bnav-item').forEach(b => b.classList.toggle('active', b.dataset.bpage === pg));
+  // sync sidebar nav active state
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.toggle('active', n.dataset.page === pg));
+  // switch page
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById('page-' + pg).classList.add('active');
+  const [t, s] = PAGE_TITLES[pg];
+  document.getElementById('topbar-title').textContent = t;
+  document.querySelector('#topbar .topbar-sub').textContent = s;
+  if (pg === 'analytics') buildAnalytics(analyticsTab);
+  if (pg === 'topearners') buildTopEarners();
+  closeSidebar();
+}
+
+// Keep bottom nav in sync when sidebar nav is used
+document.querySelectorAll('.nav-item').forEach(el => {
+  el.addEventListener('click', () => {
+    const pg = el.dataset.page;
+    document.querySelectorAll('.bnav-item').forEach(b => b.classList.toggle('active', b.dataset.bpage === pg));
+    closeSidebar();
+  });
+});
+
+// Close sidebar on Escape
+document.addEventListener('keydown', e => { if (e.key === 'Escape') closeSidebar(); });
+
+// Close autocomplete on outside click
+document.addEventListener('click', e => {
+  if (!e.target.closest('.lookup-input-wrap')) {
+    const d = document.getElementById('ac-drop');
+    if (d) d.style.display = 'none';
+  }
+});
+
+
+function getRoleData(role) {
+  const rows = ALL.filter(r=>r.designation.toLowerCase().includes(role.toLowerCase()));
+  if (!rows.length) return null;
+  const salaries = rows.map(r=>r.salary).filter(s=>s>0);
+  return {
+    count: rows.length,
+    min: Math.min(...salaries),
+    max: Math.max(...salaries),
+    avg: Math.round(avg(salaries)),
+    depts: new Set(rows.map(r=>r.dept)).size,
+    examples: rows.slice(0,3),
+  };
+}
+
+function doLookup() {
+  document.getElementById('ac-drop').style.display='none';
+  const role = document.getElementById('lookup-input').value.trim();
+  const el = document.getElementById('lookup-result');
+  if (!role) { el.innerHTML=''; return; }
+  const d = getRoleData(role);
+  if (!d) {
+    el.innerHTML = `<div style="margin-top:16px;padding:24px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--radius-lg);color:var(--ivory-faint);text-align:center">No designation found matching "<strong style="color:var(--ivory)">${role}</strong>"</div>`;
+    return;
+  }
+  const pct = (d.avg-d.min)/(d.max-d.min||1)*100;
+  el.innerHTML = `
+    <div class="result-card" style="margin-top:16px">
+      <div class="result-title">${role}</div>
+      <div class="result-sub">${d.count} employees across ${d.depts} department${d.depts!==1?'s':''}</div>
+      <div class="stat-trio">
+        <div class="stat-box"><div class="sv" style="color:var(--red-lt)">${fmt(d.min)}</div><div class="sl">Minimum</div></div>
+        <div class="stat-box"><div class="sv" style="color:var(--gold)">${fmt(d.avg)}</div><div class="sl">Average</div></div>
+        <div class="stat-box"><div class="sv" style="color:var(--teal-lt)">${fmt(d.max)}</div><div class="sl">Maximum</div></div>
+      </div>
+      <div style="font-size:10px;color:var(--ivory-faint);margin-bottom:6px;letter-spacing:.07em">SALARY RANGE</div>
+      <div class="range-track">
+        <div class="range-fill"></div>
+        <div class="range-avg-dot" style="left:${pct}%"></div>
+      </div>
+      <div class="range-labels">
+        <span style="color:var(--red-lt)">${fmt(d.min)}</span>
+        <span style="color:var(--gold)">avg ${fmt(d.avg)}</span>
+        <span style="color:var(--teal-lt)">${fmt(d.max)}</span>
+      </div>
+      <div style="font-size:10px;color:var(--ivory-faint);margin:20px 0 8px;letter-spacing:.07em">SAMPLE EMPLOYEES</div>
+      ${d.examples.map(e=>`
+        <div class="sample-emp">
+          <div>
+            <div class="sn">${e.name}</div>
+            <div class="sd">${e.dept}</div>
+          </div>
+          <div class="ss">${fmt(e.salary)}</div>
+        </div>`).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  COMPARE ROLES
+// ══════════════════════════════════════════════
+function populateCompareDropdowns() {
+  const desigs = [...new Set(ALL.map(r=>r.designation))].sort();
+  ['cmp-role1','cmp-role2'].forEach(id => {
+    const sel = document.getElementById(id);
+    desigs.forEach(d => {
+      const o = document.createElement('option');
+      o.value = d; o.textContent = d;
+      sel.appendChild(o);
+    });
+  });
+}
+
+const PRESETS = [
+  ['Professor','Peon'],
+  ['Assistant Professor','Section Officer'],
+  ['Nursing Officer','Lab Assistant'],
+  ['Joint Registrar','Assistant Registrar'],
+  ['Associate Professor','Senior Assistant'],
+];
+
+function populatePresetChips() {
+  const wrap = document.getElementById('preset-chips');
+  PRESETS.forEach(([a,b]) => {
+    const c = document.createElement('div');
+    c.className = 'chip';
+    c.textContent = `${a} vs ${b}`;
+    c.onclick = () => {
+      document.getElementById('cmp-role1').value = a;
+      document.getElementById('cmp-role2').value = b;
+      doCompare();
+    };
+    wrap.appendChild(c);
+  });
+}
+
+function doCompare() {
+  const r1name = document.getElementById('cmp-role1').value;
+  const r2name = document.getElementById('cmp-role2').value;
+  const el = document.getElementById('compare-result');
+  if (!r1name || !r2name || r1name === r2name) {
+    el.innerHTML = r1name && r2name && r1name===r2name
+      ? `<div class="insight" style="margin-top:16px">Please select two different roles to compare.</div>` : '';
+    return;
+  }
+  const d1 = getRoleData(r1name), d2 = getRoleData(r2name);
+  if (!d1 || !d2) { el.innerHTML='<div class="insight" style="margin-top:16px">Could not find data for one of the selected roles.</div>'; return; }
+
+  const diff = Math.abs(d1.avg - d2.avg);
+  const higher = d1.avg >= d2.avg ? r1name : r2name;
+  const pct = Math.round(diff / Math.min(d1.avg,d2.avg) * 100);
+
+  const metrics = [
+    {label:'Average Salary', v1:d1.avg, v2:d2.avg, fmtFn:fmt},
+    {label:'Min Salary',     v1:d1.min, v2:d2.min, fmtFn:fmt},
+    {label:'Max Salary',     v1:d1.max, v2:d2.max, fmtFn:fmt},
+    {label:'Employee Count', v1:d1.count, v2:d2.count, fmtFn:n=>n},
+  ];
+
+  el.innerHTML = `
+    <div class="compare-grid" style="margin-top:20px">
+      <div class="compare-card blue-border">
+        <div class="compare-title" style="color:var(--blue-lt)">${r1name}</div>
+        <div style="font-size:11px;color:var(--ivory-faint);margin-bottom:16px">${d1.count} employees · ${d1.depts} depts</div>
+        ${[['Min Salary',d1.min,'var(--red-lt)'],['Avg Salary',d1.avg,'var(--gold)'],['Max Salary',d1.max,'var(--teal-lt)'],['Employee Count',d1.count,'var(--ivory)']].map(([l,v,c])=>`
+          <div class="compare-row">
+            <span class="cl">${l}</span>
+            <span class="cv" style="color:${c}">${typeof v==='number'&&l.includes('Salary')?fmt(v):v}</span>
+          </div>`).join('')}
+      </div>
+      <div class="compare-card gold-border">
+        <div class="compare-title" style="color:var(--gold)">${r2name}</div>
+        <div style="font-size:11px;color:var(--ivory-faint);margin-bottom:16px">${d2.count} employees · ${d2.depts} depts</div>
+        ${[['Min Salary',d2.min,'var(--red-lt)'],['Avg Salary',d2.avg,'var(--gold)'],['Max Salary',d2.max,'var(--teal-lt)'],['Employee Count',d2.count,'var(--ivory)']].map(([l,v,c])=>`
+          <div class="compare-row">
+            <span class="cl">${l}</span>
+            <span class="cv" style="color:${c}">${typeof v==='number'&&l.includes('Salary')?fmt(v):v}</span>
+          </div>`).join('')}
+      </div>
+    </div>
+
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">Head-to-head breakdown</div>
+      ${metrics.map(m=>{
+        const tot = m.v1+m.v2||1;
+        return `
+        <div class="hth-row">
+          <div class="hth-label">
+            <span style="color:var(--blue-lt)">${m.fmtFn(m.v1)}</span>
+            <span>${m.label}</span>
+            <span style="color:var(--gold)">${m.fmtFn(m.v2)}</span>
+          </div>
+          <div class="hth-bars">
+            <div class="hth-b1" style="flex:${m.v1/tot}"></div>
+            <div class="hth-b2" style="flex:${m.v2/tot}"></div>
+          </div>
+        </div>`;
+      }).join('')}
+    </div>
+
+    <div class="insight">
+      <strong>${higher}</strong> pays ${pct}% more on average than the other role
+      — a difference of <strong>${fmt(diff)}</strong> per month.
+      ${d1.avg > d2.avg
+        ? `<strong style="color:var(--blue-lt)">${r1name}</strong> averages <strong>${fmt(d1.avg)}</strong> vs <strong style="color:var(--gold)">${r2name}</strong> at <strong>${fmt(d2.avg)}</strong>.`
+        : `<strong style="color:var(--gold)">${r2name}</strong> averages <strong>${fmt(d2.avg)}</strong> vs <strong style="color:var(--blue-lt)">${r1name}</strong> at <strong>${fmt(d1.avg)}</strong>.`}
+    </div>`;
+}
+// ══════════════════════════════════════════════
+//  TOP EARNERS PAGE
+// ══════════════════════════════════════════════
+function populateTopEarnersDropdowns() {
+  const sel = document.getElementById('te-role');
+  const desigs = [...new Set(ALL.map(r=>r.designation))].sort();
+  desigs.forEach(d => {
+    const o = document.createElement('option');
+    o.value = d; o.textContent = d;
+    sel.appendChild(o);
+  });
+}
+
+function buildTopEarners() {
+  const role  = document.getElementById('te-role').value;
+  const count = +document.getElementById('te-count').value;
+  const type  = document.getElementById('te-type').value;
+
+  let pool = ALL.filter(r => r.salary > 0);
+  if (role)  pool = pool.filter(r => r.designation === role);
+  if (type)  pool = pool.filter(r => r.staffType === type);
+  pool = pool.slice().sort((a,b) => b.salary - a.salary);
+
+  const topN = pool.slice(0, count);
+  const el = document.getElementById('te-content');
+
+  if (!topN.length) {
+    el.innerHTML = `<div class="no-results">No employees match the selected filters.</div>`;
+    return;
+  }
+
+  const maxSal = topN[0].salary;
+  const label = role ? `Top ${count} in "${role}"` : `Top ${count} Overall Earners`;
+
+  el.innerHTML = `
+    <div class="card" style="margin-bottom:16px">
+      <div class="card-title">${label}</div>
+      ${topN.map((r, i) => {
+        const [abg, afg] = avatarColors(r.empNo);
+        const barW = Math.round((r.salary / maxSal) * 100);
+        const medal = i === 0 ? '🥇' : i === 1 ? '🥈' : i === 2 ? '🥉' : `<span style="font-size:11px;color:var(--ivory-faint);font-family:var(--mono)">#${i+1}</span>`;
+        return `
+        <div style="display:flex;align-items:center;gap:14px;padding:10px 0;border-bottom:1px solid var(--bg3)">
+          <div style="width:30px;text-align:center">${medal}</div>
+          <div class="avatar" style="background:${abg};color:${afg};flex-shrink:0">${initials(r.name)}</div>
+          <div style="flex:1;min-width:0">
+            <div style="display:flex;align-items:baseline;gap:10px;flex-wrap:wrap">
+              <span class="name-text name-link" onclick="openEmpModal('${r.empNo.replace(/'/g,"\\'")}')"style="cursor:pointer;text-decoration:underline;text-decoration-color:var(--gold-dim);text-underline-offset:3px" title="View employee card">${r.name}</span>
+              <span style="font-size:10px;color:var(--ivory-faint)">${r.designation}</span>
+            </div>
+            <div style="font-size:11px;color:var(--ivory-faint);white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${r.dept}</div>
+            <div style="margin-top:5px;height:4px;background:var(--bg4);border-radius:2px;overflow:hidden">
+              <div style="width:${barW}%;height:100%;background:linear-gradient(90deg,var(--gold-dim),var(--gold-lt));border-radius:2px"></div>
+            </div>
+          </div>
+          <div style="font-family:var(--mono);font-size:14px;font-weight:600;color:var(--teal-lt);white-space:nowrap">${fmt(r.salary)}</div>
+        </div>`;
+      }).join('')}
+    </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  EMPLOYEE PROFILE MODAL
+// ══════════════════════════════════════════════
+function calcPercentile(empSalary, pool) {
+  if (!pool.length) return 0;
+  const below = pool.filter(s => s < empSalary).length;
+  return Math.round((below / pool.length) * 100);
+}
+
+function openEmpModal(empNo) {
+  const emp = ALL.find(r => r.empNo === empNo);
+  if (!emp) return;
+
+  // Overall percentile
+  const allSalaries = ALL.map(r=>r.salary).filter(s=>s>0);
+  const overallPct = calcPercentile(emp.salary, allSalaries);
+
+  // Same designation percentile
+  const roleSalaries = ALL.filter(r=>r.designation===emp.designation).map(r=>r.salary).filter(s=>s>0);
+  const rolePct = calcPercentile(emp.salary, roleSalaries);
+
+  // Same dept percentile
+  const deptSalaries = ALL.filter(r=>r.dept===emp.dept).map(r=>r.salary).filter(s=>s>0);
+  const deptPct = calcPercentile(emp.salary, deptSalaries);
+
+  // Role stats
+  const roleAvg = Math.round(avg(roleSalaries));
+  const roleMax = Math.max(...roleSalaries);
+  const roleMin = Math.min(...roleSalaries);
+
+  const [abg, afg] = avatarColors(emp.empNo);
+
+  const overallRank = ALL.filter(r=>r.salary>0).sort((a,b)=>b.salary-a.salary).findIndex(r=>r.empNo===empNo)+1;
+  const totalWithSal = ALL.filter(r=>r.salary>0).length;
+
+  function percentileBadge(pct) {
+    if (pct >= 99) return { color: 'var(--gold)', label: 'Top 1%' };
+    if (pct >= 95) return { color: 'var(--gold)', label: 'Top 5%' };
+    if (pct >= 90) return { color: 'var(--teal-lt)', label: 'Top 10%' };
+    if (pct >= 75) return { color: 'var(--teal-lt)', label: 'Top 25%' };
+    if (pct >= 50) return { color: 'var(--blue-lt)', label: 'Top 50%' };
+    return { color: 'var(--ivory-dim)', label: 'Below Median' };
+  }
+
+  const pb = percentileBadge(overallPct);
+
+  document.getElementById('emp-modal-content').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px;margin-bottom:24px">
+      <div class="avatar" style="width:52px;height:52px;border-radius:50%;background:${abg};color:${afg};font-size:18px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0">${initials(emp.name)}</div>
+      <div>
+        <div style="font-family:var(--serif);font-size:22px;font-weight:700;color:var(--ivory)">${emp.name}</div>
+        <div style="font-size:12px;color:var(--ivory-faint);margin-top:2px">${emp.designation}</div>
+        <div style="font-size:11px;color:var(--ivory-faint)">${emp.dept}</div>
+      </div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px">
+        <div style="font-size:10px;color:var(--ivory-faint);letter-spacing:.07em;margin-bottom:4px">EMP NO</div>
+        <div style="font-family:var(--mono);color:var(--gold);font-size:15px">${emp.empNo}</div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:12px">
+        <div style="font-size:10px;color:var(--ivory-faint);letter-spacing:.07em;margin-bottom:4px">STAFF TYPE</div>
+        <div><span class="type-badge ${emp.staffType==='Teaching'?'type-T':'type-NT'}">${emp.staffType}</span></div>
+      </div>
+      <div style="background:var(--bg3);border:1px solid var(--gold-dim);border-radius:var(--radius);padding:12px;grid-column:1/-1">
+        <div style="font-size:10px;color:var(--ivory-faint);letter-spacing:.07em;margin-bottom:4px">GROSS SALARY</div>
+        <div style="font-family:var(--mono);color:var(--teal-lt);font-size:24px;font-weight:600">${fmt(emp.salary)}</div>
+        <div style="font-size:11px;color:var(--ivory-faint);margin-top:2px">Overall rank: #${overallRank} of ${totalWithSal.toLocaleString()}</div>
+      </div>
+    </div>
+
+    <div style="font-size:10px;color:var(--ivory-faint);letter-spacing:.08em;margin-bottom:10px">EARNINGS PERCENTILE</div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--ivory-dim)">Overall (all BHU staff)</span>
+        <span style="font-size:13px;font-weight:600;color:${pb.color};font-family:var(--mono)">${pb.label} · ${overallPct}th %ile</span>
+      </div>
+      <div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden">
+        <div style="width:${overallPct}%;height:100%;background:${pb.color};border-radius:4px;transition:width .6s ease"></div>
+      </div>
+      <div style="font-size:10px;color:var(--ivory-faint);margin-top:4px">Earns more than ${overallPct}% of all BHU employees</div>
+    </div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:8px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--ivory-dim)">Within role (${emp.designation})</span>
+        <span style="font-size:13px;font-weight:600;color:var(--blue-lt);font-family:var(--mono)">${rolePct}th %ile</span>
+      </div>
+      <div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden">
+        <div style="width:${rolePct}%;height:100%;background:var(--blue-lt);border-radius:4px;transition:width .6s ease"></div>
+      </div>
+      <div style="font-size:10px;color:var(--ivory-faint);margin-top:4px">Earns more than ${rolePct}% of colleagues in same role · Role avg ${fmt(roleAvg)}</div>
+    </div>
+
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:20px">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span style="font-size:12px;color:var(--ivory-dim)">Within dept</span>
+        <span style="font-size:13px;font-weight:600;color:var(--teal-lt);font-family:var(--mono)">${deptPct}th %ile</span>
+      </div>
+      <div style="height:8px;background:var(--bg4);border-radius:4px;overflow:hidden">
+        <div style="width:${deptPct}%;height:100%;background:var(--teal-lt);border-radius:4px;transition:width .6s ease"></div>
+      </div>
+      <div style="font-size:10px;color:var(--ivory-faint);margin-top:4px">Earns more than ${deptPct}% of employees in same department</div>
+    </div>
+
+    <div style="font-size:10px;color:var(--ivory-faint);letter-spacing:.08em;margin-bottom:10px">ROLE SALARY RANGE</div>
+    <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--radius);padding:14px">
+      <div style="display:flex;justify-content:space-between;font-size:11px;margin-bottom:6px">
+        <span style="color:var(--red-lt)">Min: ${fmt(roleMin)}</span>
+        <span style="color:var(--gold)">Avg: ${fmt(roleAvg)}</span>
+        <span style="color:var(--teal-lt)">Max: ${fmt(roleMax)}</span>
+      </div>
+      <div style="position:relative;height:10px;background:var(--bg4);border-radius:5px">
+        <div style="position:absolute;height:100%;background:linear-gradient(90deg,#8B2020,#C8922A,#1A6B5A);left:0;right:0;border-radius:5px;opacity:.5"></div>
+        <div style="position:absolute;width:14px;height:14px;background:var(--ivory);border:3px solid var(--gold);border-radius:50%;top:50%;left:${Math.round((emp.salary-roleMin)/(roleMax-roleMin||1)*100)}%;transform:translate(-50%,-50%);box-shadow:0 0 0 2px var(--bg)"></div>
+      </div>
+    </div>
+  `;
+
+  const modal = document.getElementById('emp-modal');
+  modal.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function closeEmpModal() {
+  document.getElementById('emp-modal').style.display = 'none';
+  document.body.style.overflow = '';
+}
+
+document.getElementById('emp-modal').addEventListener('click', e => {
+  if (e.target === document.getElementById('emp-modal')) closeEmpModal();
+});
+</script>
+</body>
+</html>
